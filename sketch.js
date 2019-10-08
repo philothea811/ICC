@@ -1,71 +1,59 @@
+var max_rainDrops = 1000;
+var rainDrops = [];
+var rainSound;
+
+function rainDrop(x, y, vy, sz, c) {
+  this.x = x;
+  this.y = y;
+  this.vy = vy;
+  this.sz = sz;
+  this.c = c;
+
+  this.move = function() {
+    this.y += this.vy; 
+    if (this.y>windowHeight) this.y = 0;
+
+    if (mouseIsPressed) {
+      var xdif = abs(this.x-mouseX);
+      if (xdif < 100 + random(-100,100)) {
+        if ( (this.y- mouseY) > random(-100,100)) {
+          this.y=0;
+        }
+      }
+    }
+  }
+
+  this.render = function() { 
+    noStroke();
+    fill(this.c);
+    ellipse(this.x, this.y, 2, this.sz);
+  }
+}
+
+function preload() {
+  rainSound = loadSound('rain_inside_house.mp3');
+}
+
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  background(3,0,39);
-  frameRate(4);
+  createCanvas(windowWidth, windowHeight);
+
+  var i;
+  for (i=0; i<max_rainDrops; i++) {
+    rainDrops[i] = new rainDrop(
+      random(0, windowWidth), random(0, windowHeight), 
+      random(30, 100), 
+      random(30, 100), color(random(100, 255)) );
+  }
+  
+  rainSound.loop();
 }
 
 function draw() {
-  if (mouseIsPressed) {
-    translate(mouseX,mouseY);
-    rotate(radians(frameCount));
-    noStroke();
-    fill(110,240,231);
-  for (var cnt = 0; cnt < 6; cnt++) {  
-      ellipse(0, -27, 29, 43);
-      rotate(radians(60));
-  }
-  fill(124,171,174); // ash blue petals
-  for (var cnt = 0; cnt < 12; cnt++) { 
-    ellipse(0,-20, 8, 12);
-    rotate(radians(30));
-  }
-  
-  // center circle
-  fill(255, 249, 187);
-  ellipse(0, 0, 30, 30);
-   }
-    //2. white-viloet flower(left key)
-  if (keyCode == LEFT_ARROW) {
-  translate(mouseX,mouseY);
-  noStroke();
-  fill(255,255,255); // white petals
-  for (var cnt = 0; cnt < 8; cnt++) { 
-  ellipse(0,-15, 10, 25);
-  rotate(radians(45));    
-   }
-  fill(110,26,90); // violet
-  ellipse(0, 0, 18, 18);  
-  }
-//3. yellow flower (right key)
-  if (keyCode ==  RIGHT_ARROW) {
-  translate(mouseX,mouseY);
-  noStroke();
-  fill(248,239,045); // yellow petals
-  for (var cnt = 0; cnt < 8; cnt++) { 
-  ellipse(0,-15, 10, 20);
-  rotate(radians(45));    
-   }
-  fill(216,215,210); // white
-  ellipse(0, 0, 10, 10);  
-  }
+  background(0);
 
-//4. pink flower(left key)
-  if (keyCode == UP_ARROW) {
-  translate(mouseX,mouseY);
-  noStroke();
-  fill(255,118,137); // pink petals
-  for (var cnt = 0; cnt < 5; cnt++) { 
-  ellipse(0,-15, 18, 20);
-  rotate(radians(72));    
-   }
-  fill(255,255,255); // white petals
-  for (var cnt = 0; cnt < 10; cnt++) { 
-  ellipse(0,-12, 3,4);
-  rotate(radians(36));    
-   }
-  fill(180,0,0); // 
-  ellipse(0, 0, 14, 14);  
-  }
-    
-    
+  var i;
+  for (i=0; i<max_rainDrops; i++) {
+    rainDrops[i].move();
+    rainDrops[i].render();
+  }
 }
