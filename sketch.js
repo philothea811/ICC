@@ -1,59 +1,50 @@
-var max_rainDrops = 1000;
-var rainDrops = [];
-var rainSound;
-
-function rainDrop(x, y, vy, sz, c) {
-  this.x = x;
-  this.y = y;
-  this.vy = vy;
-  this.sz = sz;
-  this.c = c;
-
-  this.move = function() {
-    this.y += this.vy; 
-    if (this.y>windowHeight) this.y = 0;
-
-    if (mouseIsPressed) {
-      var xdif = abs(this.x-mouseX);
-      if (xdif < 100 + random(-100,100)) {
-        if ( (this.y- mouseY) > random(-100,100)) {
-          this.y=0;
-        }
-      }
-    }
-  }
-
-  this.render = function() { 
-    noStroke();
-    fill(this.c);
-    ellipse(this.x, this.y, 2, this.sz);
-  }
-}
-
-function preload() {
-  rainSound = loadSound('rain_inside_house.mp3');
-}
+var airQdata = null;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-
-  var i;
-  for (i=0; i<max_rainDrops; i++) {
-    rainDrops[i] = new rainDrop(
-      random(0, windowWidth), random(0, windowHeight), 
-      random(30, 100), 
-      random(30, 100), color(random(100, 255)) );
-  }
-  
-  rainSound.loop();
+  createCanvas(windowWidth, windowHeight);
+  var url ='http://openapi.seoul.go.kr:8088/6d736b52546a75733535774e66546c/json/ListAirQualityByDistrictService/1/25/';
+  
+  loadJSON(url, onAirQ);
+  textSize(18);
+  textAlign(LEFT, TOP);
+  noStroke();
 }
 
 function draw() {
-  background(0);
+  background(0);
+  if (airQdata == null) return;
+  //console.log(airQdata);
+  translate(width / 2, height / 2);
+  var nDist = airQdata.list_total_count;
+  var angStep = TWO_PI / nDist
+  var maxPM10 = 0,
+    minPM10 = 200;
+  for (var i = 0; i < nDist; i++) {
+    if (isNaN(airQdata.row[i].PM10)) continue;
+    maxPM10 = max(airQdata.row[i].PM10, maxPM10);
+    minPM10 = min(airQdata.row[i].PM10, minPM10);
+  }
+  var angOffset = map(mouseX, 0, width, 0, TWO_PI);
+  var scaleSz = map(mouseY, 0, height, 1, 2);
+  for (var i = 0; i < nDist; i++) {
+    push();
+    rotate(angStep * i + angOffset);
+    scale(scaleSz);
+    if (isNaN(airQdata.row[i].PM10)) {
+      fill(127);
+      text("No Data", 80, 0);
+      text(airQdata.row[i].MSRSTENAME, 200, 0);
+    } else {
+      var red = map(airQdata.row[i].PM10, minPM10, maxPM10, 0, 255);
+      red = constrain(red, 0, 255);
+      fill(red, 255, 255);
+      rect(50, 0, airQdata.row[i].PM10 * 3, 15);
+      text(airQdata.row[i].MSRSTENAME, airQdata.row[i].PM10 * 3 + 80, 0);
+    }
+    pop();
+  }
+}
 
-  var i;
-  for (i=0; i<max_rainDrops; i++) {
-    rainDrops[i].move();
-    rainDrops[i].render();
-  }
+function onAirQ(data) {
+  airQdata = data.ListAirQualityByDistrictService;
 }
